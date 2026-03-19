@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIRO PHYSICS · motion, force, energy & waves</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0b0a0f;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            position: relative;
+            color: #f2eaff;
+        }
+
+        /* halftone overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(circle at 30% 40%, rgba(160, 120, 255, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 70% 85%, rgba(200, 140, 255, 0.08) 1px, transparent 1px),
+                radial-gradient(circle at 15% 90%, rgba(140, 100, 255, 0.06) 2px, transparent 2px),
+                radial-gradient(circle at 85% 20%, rgba(180, 130, 255, 0.06) 2px, transparent 2px);
+            background-size: 60px 60px, 90px 90px, 120px 120px, 150px 150px;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 50%, rgba(180, 130, 255, 0.15) 0px, transparent 3px);
+            background-size: 48px 48px;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        /* header */
+        .hero {
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 12vw, 5.5rem);
+            font-weight: 700;
+            background: linear-gradient(145deg, #d4c0ff 0%, #b47aff 40%, #9f5eff 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            filter: drop-shadow(0 0 20px #ae7aff66);
+            display: inline-block;
+            padding: 0 0.5rem;
+        }
+
+        .hero h1 span {
+            font-size: 2rem;
+            background: linear-gradient(145deg, #b47aff, #8f4aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-left: 0.5rem;
+        }
+
+        .halftone-underline {
+            height: 6px;
+            width: 300px;
+            max-width: 70%;
+            margin: 0.8rem auto 0;
+            background: linear-gradient(90deg, transparent, #c68eff, #a158ff, #c68eff, transparent);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .halftone-underline::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 24px;
+            background: radial-gradient(circle at 20% 0%, #b47aff40 2px, transparent 3px);
+            background-size: 24px 12px;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .subhead {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #bcb0da;
+            max-width: 700px;
+            margin: 1.5rem auto 0;
+            background: rgba(20, 10, 30, 0.5);
+            backdrop-filter: blur(8px);
+            padding: 0.75rem 2rem;
+            border-radius: 60px;
+            border: 1px solid #4a2c7333;
+            box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.7);
+        }
+
+        /* card grid */
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+            margin: 3.5rem 0 2rem;
+        }
+
+        .tool-card {
+            background: rgba(18, 14, 28, 0.7);
+            backdrop-filter: blur(8px);
+            border: 1px solid #3b2a55;
+            border-radius: 2.5rem 2.5rem 2rem 2rem;
+            padding: 2rem 1.8rem 1.8rem 1.8rem;
+            box-shadow: 0 25px 40px -15px #000000dd, 0 0 0 1px #6236b31a inset;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card:hover {
+            border-color: #aa7eff;
+            box-shadow: 0 30px 50px -20px #b47aff, 0 0 0 1.5px #b47aff66 inset;
+            transform: translateY(-6px);
+            background: rgba(22, 16, 34, 0.8);
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle at 30% 70%, #c7a6ff10 1px, transparent 1px),
+                              radial-gradient(circle at 70% 20%, #b27aff15 1.5px, transparent 1.5px);
+            background-size: 36px 36px, 48px 48px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.8rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .card-header i {
+            font-size: 2.5rem;
+            color: #e1ceff;
+            filter: drop-shadow(0 0 6px #b372ff);
+            background: linear-gradient(145deg, #b37aff, #8f4aff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(145deg, #f0eaff, #dbbdff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .tool-body {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        /* physics specific styles */
+        .physics-container {
+            background: #1a1430;
+            border-radius: 40px;
+            padding: 1.5rem;
+            border: 1px solid #624b8b;
+            box-shadow: 0 10px 0 #2c1f41, inset 0 1px 4px #bba6ff55;
+            margin-bottom: 1rem;
+        }
+
+        .formula-badge {
+            background: #0f0b1a;
+            border-radius: 30px;
+            padding: 0.8rem 1.2rem;
+            margin: 1rem 0;
+            border: 1px solid #9f5eff;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #e6d0ff;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #0f0b1a;
+            border-radius: 60px;
+            padding: 0.3rem 0.3rem 0.3rem 1.5rem;
+            border: 1px solid #5c3f8c;
+            margin: 0.8rem 0;
+        }
+
+        .input-group label {
+            min-width: 100px;
+            color: #b097e6;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            background: transparent;
+            border: none;
+            color: #f2eaff;
+            font-size: 1.1rem;
+            padding: 0.8rem;
+            width: 100%;
+            font-family: 'Space Grotesk', monospace;
+        }
+
+        .input-group input:focus {
+            outline: none;
+        }
+
+        .input-group span {
+            background: #2d2347;
+            padding: 0.5rem 1.2rem;
+            border-radius: 60px;
+            color: #dac5ff;
+            border: 1px solid #7b5eb0;
+        }
+
+        .result-display {
+            background: #2d2347;
+            border-radius: 30px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+            border: 1px solid #b47aff;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .result-display span {
+            color: #b47aff;
+            font-size: 2rem;
+            display: block;
+        }
+
+        .control-btn {
+            background: #2d2347;
+            border: none;
+            border-radius: 40px;
+            padding: 0.8rem 1.5rem;
+            color: #e6d0ff;
+            border: 1px solid #7b5eb0;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #1a122e;
+            transition: all 0.1s ease;
+            font-size: 1rem;
+            margin: 0.3rem;
+        }
+
+        .control-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .control-btn:hover {
+            background: #382b57;
+        }
+
+        .wave-canvas {
+            width: 100%;
+            height: 120px;
+            background: #0f0b1a;
+            border-radius: 30px;
+            border: 1px solid #624b8b;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wave {
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                transparent 0px, 
+                transparent 10px,
+                rgba(180, 122, 255, 0.2) 10px,
+                rgba(180, 122, 255, 0.2) 12px);
+            position: relative;
+            animation: waveMove 3s linear infinite;
+        }
+
+        @keyframes waveMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+
+        .wave::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #b47aff;
+            transform: translateY(-50%);
+            box-shadow: 0 0 20px #b47aff;
+        }
+
+        .unit-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .unit-btn {
+            background: #0f0b1a;
+            border: 1px solid #5c3f8c;
+            border-radius: 30px;
+            padding: 0.5rem 1.2rem;
+            color: #b097e6;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+
+        .unit-btn.active {
+            background: #9f5eff;
+            color: #0f0b1a;
+            border-color: #dbbaff;
+        }
+
+        .physics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .const-card {
+            background: #0f0b1a;
+            border-radius: 20px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid #5c3f8c;
+        }
+
+        .const-card i {
+            font-size: 1.5rem;
+            color: #b47aff;
+            margin-bottom: 0.5rem;
+        }
+
+        .const-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e6d0ff;
+        }
+
+        /* footer */
+        .footer-note {
+            margin-top: 4rem;
+            text-align: center;
+            color: #62558b;
+            font-weight: 400;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(2px);
+            padding: 1.5rem 0.5rem 0.2rem;
+            border-top: 1px dashed #6d4d9a55;
+        }
+
+        .footer-note i {
+            color: #b37eff;
+        }
+
+        @media (max-width: 600px) {
+            .tool-grid { gap: 1.5rem; }
+            .card-header h2 { font-size: 1.8rem; }
+            .physics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- hero -->
+        <div class="hero">
+            <h1>VIRO PHYSICS <span>⚡</span></h1>
+            <div class="halftone-underline"></div>
+            <div class="subhead">
+                <i class="fas fa-atom" style="margin-right: 8px;"></i> 
+                motion · force · energy · waves · circuits
+            </div>
+        </div>
+
+        <!-- physics tools grid -->
+        <div class="tool-grid">
+            <!-- CARD 1 – MOTION CALCULATOR (kinematics) -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-arrow-right"></i>
+                    <h2>motion</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="formula-badge">
+                            v = u + at &nbsp;&nbsp; s = ut + ½at²
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>initial velocity (u)</label>
+                            <input type="number" id="initialVel" value="0" step="0.1">
+                            <span>m/s</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>acceleration (a)</label>
+                            <input type="number" id="acceleration" value="9.8" step="0.1">
+                            <span>m/s²</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>time (t)</label>
+                            <input type="number" id="time" value="2" step="0.1">
+                            <span>s</span>
+                        </div>
+                        
+                        <div class="result-display">
+                            final velocity
+                            <span id="finalVel">19.6 m/s</span>
+                        </div>
+                        
+                        <div class="result-display">
+                            distance traveled
+                            <span id="distance">19.6 m</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <button class="control-btn" id="calcMotion"><i class="fas fa-calculator"></i> calculate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2 – FORCE CALCULATOR (F = ma, weight, etc) -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-weight-hanging"></i>
+                    <h2>force</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="formula-badge">
+                            F = ma &nbsp;&nbsp; W = mg &nbsp;&nbsp; F = kx
+                        </div>
+                        
+                        <div class="unit-toggle">
+                            <button class="unit-btn active" id="forceNewton">F = ma</button>
+                            <button class="unit-btn" id="forceWeight">weight</button>
+                            <button class="unit-btn" id="forceSpring">spring</button>
+                        </div>
+                        
+                        <!-- F = ma inputs -->
+                        <div id="fmaInputs">
+                            <div class="input-group">
+                                <label>mass (m)</label>
+                                <input type="number" id="mass" value="5" step="0.1">
+                                <span>kg</span>
+                            </div>
+                            <div class="input-group">
+                                <label>acceleration (a)</label>
+                                <input type="number" id="forceAccel" value="9.8" step="0.1">
+                                <span>m/s²</span>
+                            </div>
+                        </div>
+                        
+                        <!-- weight inputs (hidden) -->
+                        <div id="weightInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>mass (m)</label>
+                                <input type="number" id="weightMass" value="5" step="0.1">
+                                <span>kg</span>
+                            </div>
+                            <div class="input-group">
+                                <label>gravity (g)</label>
+                                <input type="number" id="gravity" value="9.8" step="0.1">
+                                <span>m/s²</span>
+                            </div>
+                        </div>
+                        
+                        <!-- spring inputs (hidden) -->
+                        <div id="springInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>spring constant (k)</label>
+                                <input type="number" id="springConst" value="100" step="1">
+                                <span>N/m</span>
+                            </div>
+                            <div class="input-group">
+                                <label>displacement (x)</label>
+                                <input type="number" id="displacement" value="0.1" step="0.01">
+                                <span>m</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-display">
+                            force
+                            <span id="forceResult">49.0 N</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3 – ENERGY CALCULATOR (kinetic, potential, work) -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-bolt"></i>
+                    <h2>energy</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="formula-badge">
+                            KE = ½mv² &nbsp; PE = mgh &nbsp; W = Fd
+                        </div>
+                        
+                        <div class="unit-toggle">
+                            <button class="unit-btn active" id="energyKE">kinetic</button>
+                            <button class="unit-btn" id="energyPE">potential</button>
+                            <button class="unit-btn" id="energyWork">work</button>
+                        </div>
+                        
+                        <!-- kinetic energy -->
+                        <div id="keInputs">
+                            <div class="input-group">
+                                <label>mass</label>
+                                <input type="number" id="keMass" value="2" step="0.1">
+                                <span>kg</span>
+                            </div>
+                            <div class="input-group">
+                                <label>velocity</label>
+                                <input type="number" id="keVel" value="5" step="0.1">
+                                <span>m/s</span>
+                            </div>
+                        </div>
+                        
+                        <!-- potential energy (hidden) -->
+                        <div id="peInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>mass</label>
+                                <input type="number" id="peMass" value="2" step="0.1">
+                                <span>kg</span>
+                            </div>
+                            <div class="input-group">
+                                <label>height</label>
+                                <input type="number" id="height" value="10" step="0.1">
+                                <span>m</span>
+                            </div>
+                            <div class="input-group">
+                                <label>gravity</label>
+                                <input type="number" id="peGravity" value="9.8" step="0.1">
+                                <span>m/s²</span>
+                            </div>
+                        </div>
+                        
+                        <!-- work (hidden) -->
+                        <div id="workInputs" style="display: none;">
+                            <div class="input-group">
+                                <label>force</label>
+                                <input type="number" id="workForce" value="10" step="0.1">
+                                <span>N</span>
+                            </div>
+                            <div class="input-group">
+                                <label>distance</label>
+                                <input type="number" id="workDist" value="5" step="0.1">
+                                <span>m</span>
+                            </div>
+                        </div>
+                        
+                        <div class="result-display">
+                            energy
+                            <span id="energyResult">25.0 J</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- second row -->
+        <div class="tool-grid" style="margin-top: 0;">
+            <!-- CARD 4 – WAVES & OSCILLATIONS -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-wave-square"></i>
+                    <h2>waves</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="formula-badge">
+                            v = fλ &nbsp;&nbsp; T = 1/f &nbsp;&nbsp; f = 1/T
+                        </div>
+                        
+                        <div class="wave-canvas">
+                            <div class="wave"></div>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>frequency (f)</label>
+                            <input type="number" id="frequency" value="100" step="1">
+                            <span>Hz</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>wavelength (λ)</label>
+                            <input type="number" id="wavelength" value="3" step="0.1">
+                            <span>m</span>
+                        </div>
+                        
+                        <div class="result-display">
+                            wave speed
+                            <span id="waveSpeed">300 m/s</span>
+                        </div>
+                        
+                        <div class="result-display">
+                            period
+                            <span id="period">0.010 s</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.5rem;">
+                            <button class="control-btn" id="calcWave"><i class="fas fa-sync"></i> calculate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 5 – CIRCUITS (Ohm's law, power) -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-bolt"></i>
+                    <h2>circuits</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="formula-badge">
+                            V = IR &nbsp;&nbsp; P = VI &nbsp;&nbsp; P = I²R
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>voltage (V)</label>
+                            <input type="number" id="voltage" value="12" step="0.1">
+                            <span>V</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>current (I)</label>
+                            <input type="number" id="current" value="2" step="0.1">
+                            <span>A</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label>resistance (R)</label>
+                            <input type="number" id="resistance" value="6" step="0.1">
+                            <span>Ω</span>
+                        </div>
+                        
+                        <div class="result-display">
+                            power
+                            <span id="power">24.0 W</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            <button class="control-btn" id="calcOhm"><i class="fas fa-calculator"></i> calculate</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 6 – PHYSICAL CONSTANTS & REFERENCES -->
+            <div class="tool-card">
+                <div class="card-header">
+                    <i class="fas fa-star"></i>
+                    <h2>constants</h2>
+                </div>
+                <div class="tool-body">
+                    <div class="physics-container">
+                        <div class="physics-grid">
+                            <div class="const-card">
+                                <i class="fas fa-lightbulb"></i>
+                                <div>speed of light</div>
+                                <div class="const-value">3.00×10⁸ m/s</div>
+                            </div>
+                            <div class="const-card">
+                                <i class="fas fa-weight-hanging"></i>
+                                <div>gravity (g)</div>
+                                <div class="const-value">9.81 m/s²</div>
+                            </div>
+                            <div class="const-card">
+                                <i class="fas fa-bolt"></i>
+                                <div>Planck's const</div>
+                                <div class="const-value">6.63×10⁻³⁴ J·s</div>
+                            </div>
+                            <div class="const-card">
+                                <i class="fas fa-charge"></i>
+                                <div>electron charge</div>
+                                <div class="const-value">1.60×10⁻¹⁹ C</div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1rem; background: #0f0b1a; border-radius: 30px; padding: 1rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>unit prefixes</span>
+                                <span>k (kilo) 10³</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>M (mega) 10⁶</span>
+                                <span>m (milli) 10⁻³</span>
+                                <span>μ (micro) 10⁻⁶</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- footer -->
+        <div class="footer-note">
+            <i class="fas fa-atom"></i> VIRO PHYSICS · equations, formulas & simulations · purple black halftone edition 
+            <span style="display: inline-block; background:#3a2b57; padding:0.2rem 0.8rem; border-radius: 40px; margin-left: 0.8rem;">v1.0</span>
+        </div>
+    </div>
+
+    <!-- interactive scripts -->
+    <script>
+        (function() {
+            // ----- MOTION CALCULATOR -----
+            function calcMotion() {
+                const u = parseFloat(document.getElementById('initialVel').value) || 0;
+                const a = parseFloat(document.getElementById('acceleration').value) || 0;
+                const t = parseFloat(document.getElementById('time').value) || 0;
+                
+                const v = u + a * t;
+                const s = u * t + 0.5 * a * t * t;
+                
+                document.getElementById('finalVel').innerHTML = v.toFixed(2) + ' m/s';
+                document.getElementById('distance').innerHTML = s.toFixed(2) + ' m';
+            }
+            
+            document.getElementById('calcMotion').addEventListener('click', calcMotion);
+            calcMotion(); // initial calc
+            
+            // ----- FORCE CALCULATOR with tabs -----
+            const forceNewton = document.getElementById('forceNewton');
+            const forceWeight = document.getElementById('forceWeight');
+            const forceSpring = document.getElementById('forceSpring');
+            
+            const fmaInputs = document.getElementById('fmaInputs');
+            const weightInputs = document.getElementById('weightInputs');
+            const springInputs = document.getElementById('springInputs');
+            
+            function updateForce() {
+                if (forceNewton.classList.contains('active')) {
+                    const m = parseFloat(document.getElementById('mass').value) || 0;
+                    const a = parseFloat(document.getElementById('forceAccel').value) || 0;
+                    const f = m * a;
+                    document.getElementById('forceResult').innerHTML = f.toFixed(2) + ' N';
+                } else if (forceWeight.classList.contains('active')) {
+                    const m = parseFloat(document.getElementById('weightMass').value) || 0;
+                    const g = parseFloat(document.getElementById('gravity').value) || 0;
+                    const w = m * g;
+                    document.getElementById('forceResult').innerHTML = w.toFixed(2) + ' N';
+                } else {
+                    const k = parseFloat(document.getElementById('springConst').value) || 0;
+                    const x = parseFloat(document.getElementById('displacement').value) || 0;
+                    const f = k * x;
+                    document.getElementById('forceResult').innerHTML = f.toFixed(2) + ' N';
+                }
+            }
+            
+            forceNewton.addEventListener('click', () => {
+                forceNewton.classList.add('active');
+                forceWeight.classList.remove('active');
+                forceSpring.classList.remove('active');
+                fmaInputs.style.display = 'block';
+                weightInputs.style.display = 'none';
+                springInputs.style.display = 'none';
+                updateForce();
+            });
+            
+            forceWeight.addEventListener('click', () => {
+                forceWeight.classList.add('active');
+                forceNewton.classList.remove('active');
+                forceSpring.classList.remove('active');
+                fmaInputs.style.display = 'none';
+                weightInputs.style.display = 'block';
+                springInputs.style.display = 'none';
+                updateForce();
+            });
+            
+            forceSpring.addEventListener('click', () => {
+                forceSpring.classList.add('active');
+                forceNewton.classList.remove('active');
+                forceWeight.classList.remove('active');
+                fmaInputs.style.display = 'none';
+                weightInputs.style.display = 'none';
+                springInputs.style.display = 'block';
+                updateForce();
+            });
+            
+            // add input listeners
+            document.getElementById('mass').addEventListener('input', updateForce);
+            document.getElementById('forceAccel').addEventListener('input', updateForce);
+            document.getElementById('weightMass').addEventListener('input', updateForce);
+            document.getElementById('gravity').addEventListener('input', updateForce);
+            document.getElementById('springConst').addEventListener('input', updateForce);
+            document.getElementById('displacement').addEventListener('input', updateForce);
+            
+            // ----- ENERGY CALCULATOR with tabs -----
+            const energyKE = document.getElementById('energyKE');
+            const energyPE = document.getElementById('energyPE');
+            const energyWork = document.getElementById('energyWork');
+            
+            const keInputs = document.getElementById('keInputs');
+            const peInputs = document.getElementById('peInputs');
+            const workInputs = document.getElementById('workInputs');
+            
+            function updateEnergy() {
+                if (energyKE.classList.contains('active')) {
+                    const m = parseFloat(document.getElementById('keMass').value) || 0;
+                    const v = parseFloat(document.getElementById('keVel').value) || 0;
+                    const ke = 0.5 * m * v * v;
+                    document.getElementById('energyResult').innerHTML = ke.toFixed(2) + ' J';
+                } else if (energyPE.classList.contains('active')) {
+                    const m = parseFloat(document.getElementById('peMass').value) || 0;
+                    const h = parseFloat(document.getElementById('height').value) || 0;
+                    const g = parseFloat(document.getElementById('peGravity').value) || 0;
+                    const pe = m * g * h;
+                    document.getElementById('energyResult').innerHTML = pe.toFixed(2) + ' J';
+                } else {
+                    const f = parseFloat(document.getElementById('workForce').value) || 0;
+                    const d = parseFloat(document.getElementById('workDist').value) || 0;
+                    const w = f * d;
+                    document.getElementById('energyResult').innerHTML = w.toFixed(2) + ' J';
+                }
+            }
+            
+            energyKE.addEventListener('click', () => {
+                energyKE.classList.add('active');
+                energyPE.classList.remove('active');
+                energyWork.classList.remove('active');
+                keInputs.style.display = 'block';
+                peInputs.style.display = 'none';
+                workInputs.style.display = 'none';
+                updateEnergy();
+            });
+            
+            energyPE.addEventListener('click', () => {
+                energyPE.classList.add('active');
+                energyKE.classList.remove('active');
+                energyWork.classList.remove('active');
+                keInputs.style.display = 'none';
+                peInputs.style.display = 'block';
+                workInputs.style.display = 'none';
+                updateEnergy();
+            });
+            
+            energyWork.addEventListener('click', () => {
+                energyWork.classList.add('active');
+                energyKE.classList.remove('active');
+                energyPE.classList.remove('active');
+                keInputs.style.display = 'none';
+                peInputs.style.display = 'none';
+                workInputs.style.display = 'block';
+                updateEnergy();
+            });
+            
+            // add input listeners
+            document.getElementById('keMass').addEventListener('input', updateEnergy);
+            document.getElementById('keVel').addEventListener('input', updateEnergy);
+            document.getElementById('peMass').addEventListener('input', updateEnergy);
+            document.getElementById('height').addEventListener('input', updateEnergy);
+            document.getElementById('peGravity').addEventListener('input', updateEnergy);
+            document.getElementById('workForce').addEventListener('input', updateEnergy);
+            document.getElementById('workDist').addEventListener('input', updateEnergy);
+            
+            // ----- WAVES CALCULATOR -----
+            function calcWave() {
+                const f = parseFloat(document.getElementById('frequency').value) || 0;
+                const lambda = parseFloat(document.getElementById('wavelength').value) || 0;
+                
+                const v = f * lambda;
+                const T = 1 / (f || 1); // avoid divide by zero
+                
+                document
